@@ -97,13 +97,9 @@ Download `obsidian-vault.skill` from the [latest release](../../releases) and in
 
 ### 4. Add the CLAUDE.md snippet
 
-Append the following to `~/.claude/CLAUDE.md` (create the file if it doesn't exist). Update the path to your vault:
+Copy the contents of `CLAUDE-snippet.md` into your `~/.claude/CLAUDE.md` file (create it if it doesn't exist). Then update the vault path and collection mapping table to match your vault's folder structure and qmd collections.
 
-```markdown
-## Obsidian Vault
-
-My Obsidian vault is at `~/path/to/your/Obsidian/Vaults/`. The `qmd` MCP server provides search and read access, and the `obsidian-vault` MCP server provides write access. Use the obsidian-vault skill for detailed instructions on reading, creating, and searching notes.
-```
+The collection mapping lets you say things like "save this to projects" or "create a note in dev" and Claude will write to the correct folder.
 
 ## Usage
 
@@ -128,6 +124,7 @@ Claude uses qmd's semantic search to find relevant notes (even when the exact wo
 ```
 obsidian-vault/
 ├── SKILL.md                        # Main skill instructions
+├── CLAUDE-snippet.md               # Template to customize and add to ~/.claude/CLAUDE.md
 ├── references/
 │   └── obsidian-syntax.md          # Obsidian Markdown syntax reference
 └── README.md                       # You are here

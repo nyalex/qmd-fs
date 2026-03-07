@@ -163,7 +163,20 @@ claude mcp list
 - Make sure the vault path is absolute (no `~` or `$HOME`)
 
 **New notes not appearing in search:**
-- qmd indexes are not live-updated. Run `qmd update && qmd embed` after creating notes to make them searchable.
+
+In Claude Code, the skill automatically runs `qmd update` after creating or modifying notes. For Claude.ai/Desktop, reindexing can't be triggered from within the conversation. Options:
+
+```bash
+# Manual reindex
+qmd update && qmd embed
+
+# Auto-reindex with cron (every 15 minutes)
+# Add to crontab with: crontab -e
+*/15 * * * * /usr/local/bin/qmd update && /usr/local/bin/qmd embed
+
+# Auto-reindex with fswatch (on file change, macOS)
+fswatch -o ~/path/to/your/Obsidian/Vaults | xargs -n1 -I{} sh -c 'qmd update && qmd embed'
+```
 
 ## License
 

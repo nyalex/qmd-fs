@@ -47,12 +47,12 @@ You need both MCP servers — qmd for search/read and filesystem for write/organ
 
 ```bash
 # qmd — search and read
-claude mcp add qmd -- qmd mcp
+claude mcp add qmd -s user -- qmd mcp
 
 # filesystem — write and organize (update the path to your vault)
 claude mcp add obsidian-vault \
-  --transport stdio \
   -s user \
+  --transport stdio \
   -- npx -y @modelcontextprotocol/server-filesystem \
   "/path/to/your/Obsidian/Vaults"
 ```
@@ -90,10 +90,20 @@ Then restart Claude Desktop. You should see a hammer icon (🔨) in the chat inp
 
 ### 3. Install the skill
 
-Download `obsidian-vault.skill` from the [latest release](../../releases) and install it:
+**Claude.ai / Claude Desktop:**
 
-- **Claude.ai / Claude Desktop** — drag the `.skill` file into a conversation, or add it via Settings → Skills
-- **Claude Code** — install per your Claude Code skill configuration
+1. Go to **Settings → Capabilities** and ensure **Code execution and file creation** is enabled
+2. Go to **Customize → Skills**
+3. Upload the `obsidian-vault.skill` file from the [latest release](../../releases)
+4. Toggle the skill on
+
+**Claude Code:**
+
+Claude Code reads skills from `~/.claude/skills/` as unbundled directories. Unzip the `.skill` file:
+
+```bash
+unzip obsidian-vault.skill -d ~/.claude/skills/
+```
 
 ### 4. Add the CLAUDE.md snippet
 
@@ -156,6 +166,9 @@ npx -y @modelcontextprotocol/server-filesystem "/path/to/your/Obsidian/Vaults"
 # Check Claude Code registration
 claude mcp list
 ```
+
+**MCP servers not available in a project:**
+- Make sure you registered with `-s user` (user scope). Without it, the server is only available in the project where you registered it.
 
 **Claude Desktop not showing tools:**
 - Verify your JSON config has no syntax errors (trailing commas are a common culprit)

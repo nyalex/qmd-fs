@@ -24,11 +24,11 @@ When I reference a collection by name, use the corresponding folder path:
 
 <!-- UPDATE THE TABLE BELOW TO MATCH YOUR TEMPLATES. DELETE THIS SECTION IF YOU DON'T USE TEMPLATES. -->
 
-When I ask to create a note that matches a trigger phrase, use the corresponding template and default location:
+When I ask to create a note, check if it matches a trigger below. If so, use the corresponding template and default location. If no template matches, create the note from scratch.
 
-| Trigger | Template file | Default collection | Naming pattern |
-|---------|--------------|-------------------|----------------|
-| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` |
-| "daily note", "today's note" | `Templates/Daily Note.md` | inbox | `YYYY-MM-DD.md` |
-| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` |
-| "person", "contact" | `Templates/Person.md` | people | `[person name].md` |
+| Trigger | Template file | Default collection | Naming pattern | Explanation on usage |
+|---------|--------------|-------------------|----------------|----------------------|
+| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` | For meeting notes such as in-person or Zoom meetings |
+| "daily note", "today's note" | `Templates/Daily Note.md` | inbox | `YYYY-MM-DD.md` | Daily journal or log entry |
+| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` | Having to do with food or cooking instructions |
+| "person", "contact" | `Templates/Person.md` | people | `[person name].md` | Notes about a specific person or contact |

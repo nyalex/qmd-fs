@@ -63,6 +63,36 @@ Verify both are registered:
 claude mcp list
 ```
 
+**Claude Code (optional): Auto-allow vault tools**
+
+By default, Claude Code will ask permission each time it uses an MCP tool. To skip the prompts for vault tools, add them to your `~/.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__qmd__search",
+      "mcp__qmd__vector_search",
+      "mcp__qmd__deep_search",
+      "mcp__qmd__get",
+      "mcp__qmd__multi_get",
+      "mcp__qmd__status",
+      "mcp__obsidian-vault__read_file",
+      "mcp__obsidian-vault__read_multiple_files",
+      "mcp__obsidian-vault__write_file",
+      "mcp__obsidian-vault__create_directory",
+      "mcp__obsidian-vault__list_directory",
+      "mcp__obsidian-vault__move_file",
+      "mcp__obsidian-vault__search_files",
+      "mcp__obsidian-vault__get_file_info",
+      "mcp__obsidian-vault__directory_tree"
+    ]
+  }
+}
+```
+
+If you already have a `settings.json` with other permissions, merge the entries into the existing `allow` array.
+
 **Claude Desktop:**
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):

@@ -19,3 +19,16 @@ When I reference a collection by name, use the corresponding folder path:
 | areas | `60 Areas/` | Ongoing life areas with no end date — travel planning, weddings, and recurring responsibilities |
 | archive | `90 Archive/` | Completed projects and inactive reference material preserved for historical lookup |
 | templates | `Templates/` | Obsidian note templates for meetings, recipes, and other recurring note types |
+
+### Template mapping
+
+<!-- UPDATE THE TABLE BELOW TO MATCH YOUR TEMPLATES. DELETE THIS SECTION IF YOU DON'T USE TEMPLATES. -->
+
+When I ask to create a note that matches a trigger phrase, use the corresponding template and default location:
+
+| Trigger | Template file | Default collection | Naming pattern |
+|---------|--------------|-------------------|----------------|
+| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` |
+| "daily note", "today's note" | `Templates/Daily Note.md` | inbox | `YYYY-MM-DD.md` |
+| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` |
+| "person", "contact" | `Templates/Person.md` | people | `[person name].md` |

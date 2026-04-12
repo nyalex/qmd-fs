@@ -14,6 +14,66 @@ This skill uses two tools together:
 - **Daily notes** — create daily notes following your existing template and naming pattern
 - **Understand Obsidian syntax** — handles wikilinks, embeds, callouts, tags, Dataview blocks, and Templater expressions
 
+## Templates
+
+Templates let you define reusable note structures — meeting notes, recipes, daily journals, etc. — so Claude creates notes with the right format automatically.
+
+### How they work
+
+1. You create a Markdown template file in your vault (e.g., `Templates/Meeting Notes.md`)
+2. You add a **trigger mapping** in your `~/.claude/CLAUDE.md` that connects a phrase to that template
+3. When you say something like "create meeting notes for the standup," Claude matches the phrase to a template, reads it, resolves any dynamic values (like today's date), and writes the new note
+
+### Template mapping format
+
+Add a mapping table to your `~/.claude/CLAUDE.md` (the `CLAUDE-snippet.md` file in this repo includes a starter table):
+
+```markdown
+### Template mapping
+
+When I ask to create a note that matches a trigger below, use the corresponding template and default location.
+
+| Trigger | Template file | Default collection | Naming pattern | Explanation on usage |
+|---------|--------------|-------------------|----------------|----------------------|
+| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` | For meeting notes |
+| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` | For cooking instructions |
+```
+
+- **Trigger** — phrases that activate this template. Claude matches these against your request.
+- **Template file** — path to the template in your vault, relative to the vault root.
+- **Default collection** — which collection/folder to save to (from your collection mapping) unless you say otherwise.
+- **Naming pattern** — how to name the created file. Bracketed values like `[topic]` are filled in from context.
+- **Explanation on usage** — helps Claude decide when a template applies in ambiguous cases.
+
+### Creating a new template
+
+1. **Write the template file** in your vault's `Templates/` folder (or wherever you keep templates). Use standard Obsidian Markdown:
+
+   ```markdown
+   ---
+   tags: [meeting]
+   ---
+
+   ## Attendees
+   -
+
+   ## Agenda
+   -
+
+   ## Notes
+
+   ## Action Items
+   - [ ]
+   ```
+
+   Claude fills in dynamic values like the date and title when creating the note.
+
+2. **Add a row** to the template mapping table in your `~/.claude/CLAUDE.md` with the trigger phrase, template path, default collection, and naming pattern.
+
+3. **Test it** by asking Claude to create a note using the trigger phrase (e.g., "create meeting notes for the design review").
+
+If no template matches a request, Claude creates the note from scratch with basic frontmatter and a structure appropriate to the content.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) v22 or later

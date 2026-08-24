@@ -1,73 +1,79 @@
 # Releasing
 
-This guide covers how to build the `.skill` file and publish a GitHub release.
+How to build the `.skill` file and publish a GitHub release.
+
+## Repo layout
+
+```
+obsidian-vault/                     # skill source — tracked in git, edit this
+├── SKILL.md                        # entry point
+└── references/
+    └── obsidian-syntax.md
+CLAUDE-snippet.md                   # user config template (not part of the skill)
+README.md                           # install and usage docs
+obsidian-vault.skill                # build artifact — gitignored, never committed
+```
+
+`obsidian-vault/` is the source of truth. The `.skill` file is generated from it at
+release time, so changes go in `obsidian-vault/SKILL.md` and get reviewed as a normal
+diff. Do not edit the zip.
 
 ## What is a `.skill` file?
 
-A `.skill` file is a zip archive that Claude Code and Claude.ai use to load skill instructions. It contains:
+A zip archive that Claude Desktop and Claude Code load skill instructions from. The
+archive must contain a single top-level directory named after the skill, with
+`SKILL.md` at its root.
 
-```
-obsidian-vault/
-├── SKILL.md                        # Main skill instructions (required)
-└── references/
-    └── obsidian-syntax.md          # Supporting reference material
-```
-
-The archive must use the skill name (`obsidian-vault/`) as the top-level directory. `SKILL.md` at the root of that directory is the entry point — Claude reads it to learn what the skill does and how to behave.
-
-Files like `README.md` and `CLAUDE-snippet.md` are **not** included in the `.skill` file. They live in the repo for documentation and onboarding but aren't part of the installed skill.
-
-## Building the `.skill` file
+## Building
 
 From the repo root:
 
 ```bash
-zip -r obsidian-vault.skill obsidian-vault/
+rm -f obsidian-vault.skill
+zip -r obsidian-vault.skill obsidian-vault/ -x '*.DS_Store'
 ```
 
-This zips the `obsidian-vault/` directory (which contains `SKILL.md` and `references/`) into `obsidian-vault.skill`.
-
-Verify the contents look right:
+Verify the structure before shipping:
 
 ```bash
 unzip -l obsidian-vault.skill
 ```
 
-You should see `obsidian-vault/SKILL.md` and any files under `obsidian-vault/references/`.
+You should see `obsidian-vault/SKILL.md` and `obsidian-vault/references/obsidian-syntax.md`
+and nothing else. `README.md`, `CLAUDE-snippet.md`, and `RELEASING.md` are repo
+documentation and must **not** be in the archive.
 
-## Creating a GitHub release
+## Before tagging
 
-### 1. Tag the release
+- [ ] Every qmd tool named in `SKILL.md` and `README.md` exists in the qmd version you
+      claim to support (`query`, `get`, `multi_get`, `status` as of qmd 2.x)
+- [ ] No personal paths, vault contents, collection descriptions, or org names —
+      `CLAUDE-snippet.md` is a template, not a copy of your config
+- [ ] README's minimum qmd and Node versions still accurate
+- [ ] Skill installs clean: `unzip obsidian-vault.skill -d /tmp/skilltest && cat /tmp/skilltest/obsidian-vault/SKILL.md`
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-Use [semantic versioning](https://semver.org). Bump the minor version for new features or behavior changes, patch for fixes to existing instructions.
-
-### 2. Build the `.skill` file
-
-```bash
-zip -r obsidian-vault.skill obsidian-vault/
-```
-
-### 3. Create the release on GitHub
+## Creating a release
 
 ```bash
-gh release create v1.0.0 obsidian-vault.skill \
-  --title "v1.0.0" \
-  --notes "Description of what changed in this release."
+git tag v1.1.0
+git push origin v1.1.0
+
+rm -f obsidian-vault.skill
+zip -r obsidian-vault.skill obsidian-vault/ -x '*.DS_Store'
+
+gh release create v1.1.0 obsidian-vault.skill \
+  --title "v1.1.0" \
+  --notes "What changed in this release."
 ```
 
-Or create the release through the GitHub UI:
+[Semantic versioning](https://semver.org): minor for new behavior, patch for fixes to
+existing instructions. Bump the minor version when the skill starts depending on a
+newer qmd.
 
-1. Go to the repo → **Releases** → **Draft a new release**
-2. Choose the tag you just pushed
-3. Add a title and release notes
-4. Attach `obsidian-vault.skill` as a binary
-5. Publish
+Or through the UI: Releases → Draft a new release → pick the tag → attach
+`obsidian-vault.skill` → publish.
 
 ## Installing from a release
 
-Users download `obsidian-vault.skill` from the [releases page](../../releases) and follow the instructions in the README.
+Users download `obsidian-vault.skill` from the [releases page](../../releases) and
+follow the README.

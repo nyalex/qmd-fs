@@ -3,6 +3,39 @@
 Give Claude the ability to search, read, create, and organize notes in your
 [Obsidian](https://obsidian.md) vault — from **Claude Desktop** and **Claude Code**.
 
+## Why
+
+Knowledge you build with Claude gets stranded in the conversation that produced
+it. You end up with twenty open chats and no idea which one had the deployment
+steps that finally worked. Chat history isn't searchable in any useful way and
+you can't build on it, so you end up solving the same problem twice.
+
+This makes your vault the memory instead. Sessions become disposable; the notes
+persist. You pull a note into context, work from it, then write what you learned
+back into it — so the next session starts where the last one ended, in a
+different chat, days later.
+
+Obsidian suits this precisely because it's boring: plain Markdown on your own
+disk. Edit a note by hand and that edit is what Claude reads next time. No export
+step, no proprietary store, nothing that stops being readable if you stop using
+any of these tools.
+
+### Example: picking up where you left off
+
+> **You:** pull in my note on the homelab Docker setup
+
+Claude finds it by meaning rather than filename and loads it into context. You
+carry on with everything you'd already worked out, without reconstructing it.
+
+### Example: closing the loop
+
+> **You:** add what we just figured out about the reverse proxy to that note
+
+The note is updated in place, frontmatter and structure intact. Next month, in a
+different chat, it's there.
+
+## What's involved
+
 Two pieces work together:
 
 - [**qmd**](https://github.com/tobi/qmd) — a local search engine that indexes your
@@ -10,7 +43,9 @@ Two pieces work together:
 - [**@modelcontextprotocol/server-filesystem**](https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem)
   — a filesystem MCP server scoped to your vault, used for writes
 
-Everything runs on your machine. Neither server sends your vault anywhere.
+Both servers run on your machine, and the filesystem server can only reach the
+vault directory you point it at. Note content that Claude reads becomes part of
+the conversation, the same as anything else you send to a chat.
 
 ## What Claude can do with this
 

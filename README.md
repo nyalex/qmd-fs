@@ -1,161 +1,93 @@
 # Obsidian Vault Skill for Claude
 
-Give Claude the ability to search, read, create, and organize notes in your [Obsidian](https://obsidian.md) vault — from both **Claude Code** and **Claude.ai**.
+Give Claude the ability to search, read, create, and organize notes in your
+[Obsidian](https://obsidian.md) vault — from **Claude Desktop** and **Claude Code**.
 
-This skill uses two tools together:
-- [**qmd**](https://github.com/tobi/qmd) — A local search engine with semantic, keyword, and hybrid search for finding and reading notes
-- [**@modelcontextprotocol/server-filesystem**](https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem) — A filesystem MCP server for creating and organizing notes
+Two pieces work together:
 
-## What Claude Can Do With This
+- [**qmd**](https://github.com/tobi/qmd) — a local search engine that indexes your
+  vault and provides keyword, semantic, and hybrid search
+- [**@modelcontextprotocol/server-filesystem**](https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem)
+  — a filesystem MCP server scoped to your vault, used for writes
 
-- **Search notes semantically** — "find anything about meal prep" matches notes about "weekly food planning" or "batch cooking", not just the literal words
+Everything runs on your machine. Neither server sends your vault anywhere.
+
+## What Claude can do with this
+
+- **Search semantically** — "find anything about meal prep" matches notes about
+  "weekly food planning" or "batch cooking", not just the literal words
 - **Read notes** — pull any note into context by name, topic, or docid
-- **Create notes** — write new notes with proper frontmatter, respecting your vault's naming conventions and folder structure
-- **Daily notes** — create daily notes following your existing template and naming pattern
-- **Understand Obsidian syntax** — handles wikilinks, embeds, callouts, tags, Dataview blocks, and Templater expressions
-
-## Templates
-
-Templates let you define reusable note structures — meeting notes, recipes, daily journals, etc. — so Claude creates notes with the right format automatically.
-
-### How they work
-
-1. You create a Markdown template file in your vault (e.g., `Templates/Meeting Notes.md`)
-2. You add a **trigger mapping** in your `~/.claude/CLAUDE.md` that connects a phrase to that template
-3. When you say something like "create meeting notes for the standup," Claude matches the phrase to a template, reads it, resolves any dynamic values (like today's date), and writes the new note
-
-### Template mapping format
-
-Add a mapping table to your `~/.claude/CLAUDE.md` (the `CLAUDE-snippet.md` file in this repo includes a starter table):
-
-```markdown
-### Template mapping
-
-When I ask to create a note that matches a trigger below, use the corresponding template and default location.
-
-| Trigger | Template file | Default collection | Naming pattern | Explanation on usage |
-|---------|--------------|-------------------|----------------|----------------------|
-| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` | For meeting notes |
-| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` | For cooking instructions |
-```
-
-- **Trigger** — phrases that activate this template. Claude matches these against your request.
-- **Template file** — path to the template in your vault, relative to the vault root.
-- **Default collection** — which collection/folder to save to (from your collection mapping) unless you say otherwise.
-- **Naming pattern** — how to name the created file. Bracketed values like `[topic]` are filled in from context.
-- **Explanation on usage** — helps Claude decide when a template applies in ambiguous cases.
-
-### Creating a new template
-
-1. **Write the template file** in your vault's `Templates/` folder (or wherever you keep templates). Use standard Obsidian Markdown:
-
-   ```markdown
-   ---
-   tags: [meeting]
-   ---
-
-   ## Attendees
-   -
-
-   ## Agenda
-   -
-
-   ## Notes
-
-   ## Action Items
-   - [ ]
-   ```
-
-   Claude fills in dynamic values like the date and title when creating the note.
-
-2. **Add a row** to the template mapping table in your `~/.claude/CLAUDE.md` with the trigger phrase, template path, default collection, and naming pattern.
-
-3. **Test it** by asking Claude to create a note using the trigger phrase (e.g., "create meeting notes for the design review").
-
-If no template matches a request, Claude creates the note from scratch with basic frontmatter and a structure appropriate to the content.
+- **Create notes** — with correct frontmatter, in the right folder, matching your
+  vault's naming convention
+- **Use your templates** — resolve `{{date}}` / `{{title}}` placeholders and write the
+  result where that note type belongs
+- **Understand Obsidian syntax** — wikilinks, embeds, callouts, tags, Dataview blocks
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org) v22 or later
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and/or [Claude Desktop](https://claude.ai/download)
+- [Node.js](https://nodejs.org) **v22**. Node 25 is not supported — qmd's
+  `better-sqlite3` dependency lacks prebuilds for it.
+- **qmd 2.0 or later.** Earlier versions exposed different MCP tools and this skill
+  will not work against them.
+- [Claude Desktop](https://claude.ai/download) and/or
+  [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
 ## Installation
 
-### 1. Install and configure qmd
+### 1. Install qmd
 
 ```bash
-# Install qmd
 npm install -g @tobilu/qmd
-
-# Add your vault as a collection (update the path to your vault)
-qmd collection add /path/to/your/Obsidian/Vaults --name obsidian
-
-# Optional: add context to help search understand your content
-qmd context add qmd://obsidian "Personal Obsidian knowledge base"
-
-# Generate embeddings (one-time, updates are incremental)
-qmd embed
+qmd --version    # confirm 2.x
 ```
 
-To keep the index current, run `qmd update && qmd embed` periodically or after adding new notes.
+### 2. Add your vault as collections
 
-### 2. Register the MCP servers
-
-You need both MCP servers — qmd for search/read and filesystem for write/organize.
-
-**Claude Code:**
+**Add one collection per top-level folder, not one for the whole vault.** Collections
+are how you say "save this to projects" or restrict a search to your dev notes. A
+single vault-wide collection makes all of that impossible.
 
 ```bash
-# qmd — search and read
-claude mcp add qmd -s user -- qmd mcp
+VAULT="/absolute/path/to/your/vault"
 
-# filesystem — write and organize (update the path to your vault)
-claude mcp add obsidian-vault \
-  -s user \
-  --transport stdio \
-  -- npx -y @modelcontextprotocol/server-filesystem \
-  "/path/to/your/Obsidian/Vaults"
+qmd collection add "$VAULT/00 Inbox"   --name inbox
+qmd collection add "$VAULT/10 Projects" --name projects
+qmd collection add "$VAULT/30 Dev"      --name dev
+qmd collection add "$VAULT/40 Personal" --name personal
+qmd collection add "$VAULT/Templates"   --name templates
 ```
 
-Verify both are registered:
+Use whatever folders and names match your vault.
+
+### 3. Describe each collection
+
+Contexts tell Claude what lives where. They appear alongside every search result and
+measurably improve which notes come back.
 
 ```bash
-claude mcp list
+qmd context add qmd://inbox    "Quick captures and fleeting notes to triage later"
+qmd context add qmd://projects "Active, time-bound work with a finish line"
+qmd context add qmd://dev      "Technical reference, code snippets, runbooks"
+qmd context add qmd://personal "Personal admin — finances, health, home"
+qmd context add qmd://templates "Note templates"
 ```
 
-**Claude Code (optional): Auto-allow vault tools**
+### 4. Build the index
 
-By default, Claude Code will ask permission each time it uses an MCP tool. To skip the prompts for vault tools, add them to your `~/.claude/settings.json`:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "mcp__qmd__search",
-      "mcp__qmd__vector_search",
-      "mcp__qmd__deep_search",
-      "mcp__qmd__get",
-      "mcp__qmd__multi_get",
-      "mcp__qmd__status",
-      "mcp__obsidian-vault__read_file",
-      "mcp__obsidian-vault__read_multiple_files",
-      "mcp__obsidian-vault__write_file",
-      "mcp__obsidian-vault__create_directory",
-      "mcp__obsidian-vault__list_directory",
-      "mcp__obsidian-vault__move_file",
-      "mcp__obsidian-vault__search_files",
-      "mcp__obsidian-vault__get_file_info",
-      "mcp__obsidian-vault__directory_tree"
-    ]
-  }
-}
+```bash
+qmd update    # scan collections
+qmd embed     # generate embeddings for semantic search
+qmd status    # confirm document counts
 ```
 
-If you already have a `settings.json` with other permissions, merge the entries into the existing `allow` array.
+`qmd status` only lists collections that contain indexed documents. A collection over
+an empty folder won't appear — that's expected, not an error. `qmd collection list`
+shows all of them.
 
-**Claude Desktop:**
+### 5. Register the MCP servers
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+**Claude Desktop** — edit `~/Library/Application Support/Claude/claude_desktop_config.json`
+(macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
@@ -169,117 +101,208 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/absolute/path/to/your/Obsidian/Vaults"
+        "/absolute/path/to/your/vault"
       ]
     }
   }
 }
 ```
 
-Then restart Claude Desktop. You should see a hammer icon (🔨) in the chat input.
+Restart Claude Desktop. Use an absolute path — no `~` or `$HOME`.
 
-### 3. Install the skill
-
-**Claude.ai / Claude Desktop:**
-
-1. Go to **Settings → Capabilities** and ensure **Code execution and file creation** is enabled
-2. Go to **Customize → Skills**
-3. Upload the `obsidian-vault.skill` file from the [latest release](../../releases)
-4. Toggle the skill on
+The filesystem server is confined to the directories you pass it. Path traversal,
+absolute paths outside the root, and symlinks pointing outside are all rejected. Ask
+Claude to call `list_allowed_directories` any time you want to see the live scope.
 
 **Claude Code:**
 
-Claude Code reads skills from `~/.claude/skills/` as unbundled directories. Unzip the `.skill` file:
+```bash
+claude mcp add qmd -s user -- qmd mcp
+```
+
+That's all you need. Claude Code has native file tools, so the filesystem server is
+redundant there — skip it unless you want the same tool surface in both clients.
+
+Then allow the tools so you aren't prompted every call, in `~/.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__qmd__query",
+      "mcp__qmd__get",
+      "mcp__qmd__multi_get",
+      "mcp__qmd__status"
+    ]
+  }
+}
+```
+
+If you also registered the filesystem server in Claude Code, add the tools you want
+to auto-allow — `mcp__obsidian-vault__read_text_file`, `__write_file`, `__edit_file`,
+`__list_directory`, `__move_file`, `__search_files`, `__directory_tree`,
+`__create_directory`, `__get_file_info`.
+
+### 6. Install the skill
+
+**Claude Desktop / Claude.ai:** Settings → Capabilities → enable **Code execution and
+file creation**, then Customize → Skills → upload `obsidian-vault.skill` from the
+[latest release](../../releases) and toggle it on.
+
+**Claude Code:** skills load from `~/.claude/skills/` as directories:
 
 ```bash
 unzip obsidian-vault.skill -d ~/.claude/skills/
 ```
 
-### 4. Add the CLAUDE.md snippet
+### 7. Add the CLAUDE.md snippet
 
-Copy the contents of `CLAUDE-snippet.md` into your `~/.claude/CLAUDE.md` file (create it if it doesn't exist). Then update the vault path and collection mapping table to match your vault's folder structure and qmd collections.
+Copy `CLAUDE-snippet.md` into `~/.claude/CLAUDE.md` and replace the example values
+with your own collections, naming convention, and templates. This is what lets you say
+"save this to projects" and have it land in the right folder.
 
-The collection mapping lets you say things like "save this to projects" or "create a note in dev" and Claude will write to the correct folder.
+## Keeping the index current
+
+qmd has no file watcher. New and edited notes are invisible to search until you
+reindex, so set this up now rather than discovering it later.
+
+In Claude Code the skill runs `qmd update` for you after writing. Claude Desktop can't
+— qmd's MCP server exposes no reindex tool. Schedule it instead.
+
+**macOS (launchd, recommended)** — survives sleep, unlike cron. Save as
+`~/Library/LaunchAgents/com.you.qmd-refresh.plist` and
+`launchctl load` it:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.you.qmd-refresh</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string><string>-lc</string>
+    <string>qmd update &amp;&amp; qmd embed</string>
+  </array>
+  <key>StartInterval</key><integer>900</integer>
+  <key>RunAtLoad</key><true/>
+</dict>
+</plist>
+```
+
+**Linux (cron):**
+
+```cron
+*/15 * * * * /usr/local/bin/qmd update && /usr/local/bin/qmd embed
+```
+
+Either is a no-op when nothing changed — `qmd embed` only processes documents that
+need it. Avoid file watchers if your vault sits in a sync folder (Dropbox, iCloud,
+Synology); sync bursts will trigger overlapping runs.
+
+## Templates
+
+Put a template in your vault, add a row to the template mapping in your
+`~/.claude/CLAUDE.md`, and Claude will use it when your request matches the trigger.
+
+```markdown
+---
+tags: [meeting]
+date: "{{date}}"
+attendees:
+---
+
+# {{title}}
+
+## Notes
+
+## Action Items
+- [ ]
+```
+
+Claude resolves `{{title}}`, `{{date}}`, `{{time}}` (core Templates plugin) and
+`<% tp.* %>` (Templater), then writes the result to the collection named in your
+mapping.
+
+Quote placeholders inside frontmatter — bare `{{date}}` is invalid YAML, since `{`
+opens a flow mapping. Claude writes the resolved date unquoted in the generated note.
 
 ## Usage
 
-Once installed, just talk to Claude naturally:
-
 > *"Find anything in my vault about meal prep"*
-
 > *"Pull in my note about project planning"*
-
 > *"Create a new daily note for today"*
-
 > *"What have I written about improving my morning routine?"*
+> *"Read my weekly review template and create one for this week"*
 
-> *"List all the folders in my vault"*
+## How it works
 
-> *"Read my weekly review template and create a new one for this week"*
+qmd handles reads and search; the filesystem server handles writes. They see the same
+files but describe them differently, which matters in one specific way:
 
-Claude uses qmd's semantic search to find relevant notes (even when the exact words don't match), retrieves their content, and uses the filesystem server to create or modify notes.
-
-## What's in the Box
-
-```
-obsidian-vault/
-├── SKILL.md                        # Main skill instructions
-├── CLAUDE-snippet.md               # Template to customize and add to ~/.claude/CLAUDE.md
-├── references/
-│   └── obsidian-syntax.md          # Obsidian Markdown syntax reference
-└── README.md                       # You are here
-```
+**qmd slugifies the paths it returns.** `Templates/Meeting Note.md` on disk comes back
+as `templates/meeting-note.md`. The transformation isn't reversible, so the skill never
+hands a qmd path to a filesystem tool — it lists the real directory and matches. If it
+did otherwise you'd get duplicate notes rather than an error.
 
 ## Troubleshooting
 
-**qmd not finding anything:**
+**qmd finds nothing**
+
 ```bash
-# Check what's indexed
-qmd status
-
-# Re-index and re-embed
-qmd update
-qmd embed
-
-# Test a search directly
-qmd search "test query"
+qmd status                 # what's indexed
+qmd collection list        # every collection, including empty ones
+qmd update && qmd embed    # reindex
+qmd doctor                 # diagnose the install
 ```
 
-**MCP servers not connecting:**
+**MCP servers not connecting**
+
 ```bash
-# Test qmd MCP directly
 qmd mcp --help
-
-# Test filesystem server directly
-npx -y @modelcontextprotocol/server-filesystem "/path/to/your/Obsidian/Vaults"
-
-# Check Claude Code registration
+npx -y @modelcontextprotocol/server-filesystem "/absolute/path/to/your/vault"
 claude mcp list
 ```
 
-**MCP servers not available in a project:**
-- Make sure you registered with `-s user` (user scope). Without it, the server is only available in the project where you registered it.
+Check Claude Desktop logs at `~/Library/Logs/Claude/` (macOS). JSON syntax errors —
+trailing commas especially — are the usual cause.
 
-**Claude Desktop not showing tools:**
-- Verify your JSON config has no syntax errors (trailing commas are a common culprit)
-- Check logs at `~/Library/Logs/Claude/` (macOS)
-- Make sure the vault path is absolute (no `~` or `$HOME`)
+**MCP servers missing in a Claude Code project** — register with `-s user`, or they
+only exist in the directory where you added them.
 
-**New notes not appearing in search:**
+**Filesystem tools rejected with "unsupported dialect"** — current versions of
+`@modelcontextprotocol/server-filesystem` declare draft-07 output schemas, which
+clients built on the Claude Agent SDK reject before dispatch. This affects **Claude
+Code and Cowork sessions**; Claude Desktop's own chat is unaffected and works
+normally.
 
-In Claude Code, the skill automatically runs `qmd update` after creating or modifying notes. For Claude.ai/Desktop, reindexing can't be triggered from within the conversation. Options:
+In Claude Code you don't need this server at all — use its native file tools, which
+is why the setup above doesn't register it there.
 
-```bash
-# Manual reindex
-qmd update && qmd embed
+Rolling back does **not** fix it. `2025.8.21` was the last release without output
+schemas, but its dependencies are declared as caret ranges that now resolve to MCP
+SDK 1.30 and zod 4, which `zod-to-json-schema@3` cannot process — it emits an empty
+`inputSchema` and every tool is rejected for a different reason. Pinning the whole
+tree works if you need it:
 
-# Auto-reindex with cron (every 15 minutes)
-# Add to crontab with: crontab -e
-*/15 * * * * /usr/local/bin/qmd update && /usr/local/bin/qmd embed
-
-# Auto-reindex with fswatch (on file change, macOS)
-fswatch -o ~/path/to/your/Obsidian/Vaults | xargs -n1 -I{} sh -c 'qmd update && qmd embed'
+```json
+{
+  "dependencies": { "@modelcontextprotocol/server-filesystem": "2025.8.21" },
+  "overrides": { "@modelcontextprotocol/sdk": "1.17.5", "zod": "3.25.76" }
+}
 ```
+
+`npm install` that, then point the server's `command` at
+`node_modules/@modelcontextprotocol/server-filesystem/dist/index.js` instead of using
+`npx`. Directory confinement is unaffected — path traversal, absolute paths outside
+the root, and symlinks pointing out are all still rejected on that version.
+
+See [claude-code#86142](https://github.com/anthropics/claude-code/issues/86142).
+
+**Frontmatter not being read** — the opening `---` must be the first line with the
+YAML immediately after it, and a closing `---` is required. A blank line after the
+opening delimiter silently voids the block; Obsidian renders it without complaint and
+qmd indexes it as body text.
 
 ## License
 

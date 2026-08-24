@@ -1,1 +1,6 @@
 .DS_Store
+.idea/
+.claude/settings.local.json
+
+# Built artifact — rebuild with: zip -r obsidian-vault.skill obsidian-vault/
+obsidian-vault.skill

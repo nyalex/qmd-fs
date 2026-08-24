@@ -1,34 +1,57 @@
 ## Obsidian Vault
 
-<!-- UPDATE THE PATH AND COLLECTION MAPPING BELOW TO MATCH YOUR VAULT -->
+<!-- Copy this into ~/.claude/CLAUDE.md and replace every value below with your own.
+     Everything here is an example. Delete any section you don't use. -->
 
-My Obsidian vault is at `~/Obsidian/Vault/`. The `qmd` MCP server provides search and read access, and the `obsidian-vault` MCP server provides write access. Use the obsidian-vault skill for detailed instructions on reading, creating, and searching notes.
+My Obsidian vault is at `/absolute/path/to/vault`. The `qmd` MCP server provides
+search and read access; the `obsidian-vault` MCP server provides write access. Use
+the obsidian-vault skill for how to read, create, and search notes.
 
 ### Collection mapping
 
-When I reference a collection by name, use the corresponding folder path:
+Each row maps a qmd collection to the folder it indexes. Claude reads the folder
+paths from `qmd status` at runtime — this table is here to tell Claude *what belongs
+where*, so "save this to projects" lands in the right place.
 
 | Collection | Folder path | What goes here |
 |------------|-------------|----------------|
-| inbox | `00 Inbox/` | Unsorted quick captures, ideas, and fleeting notes to be triaged later |
-| projects | `10 Projects/` | Active time-bound projects like Fireteam product development and backyard renovation |
-| business | `20 Business/` | Business entity reference info — EINs, accounts, OKRs, compliance |
-| dev | `30 Dev/` | Developer notes, code snippets, and technical reference for Git, Laravel, and Linux |
-| personal | `40 Personal/` | Personal life admin — family, finances, health records, property details, and recipes |
-| people | `50 People/` | Contact notes and relationship context for key people across work and personal life |
-| areas | `60 Areas/` | Ongoing life areas with no end date — travel planning, weddings, and recurring responsibilities |
-| archive | `90 Archive/` | Completed projects and inactive reference material preserved for historical lookup |
-| templates | `Templates/` | Obsidian note templates for meetings, recipes, and other recurring note types |
+| inbox | `00 Inbox/` | Quick captures and fleeting notes to triage later |
+| projects | `10 Projects/` | Active, time-bound work with a finish line |
+| dev | `30 Dev/` | Technical reference, code snippets, runbooks |
+| personal | `40 Personal/` | Personal admin — finances, health, home |
+| people | `50 People/` | Contact notes and relationship context |
+| areas | `60 Areas/` | Ongoing responsibilities with no end date |
+| archive | `90 Archive/` | Finished and inactive material kept for lookup |
+| templates | `Templates/` | Note templates |
+
+Keep the descriptions specific to your own vault — they are what Claude uses to
+choose a destination when you don't name one. The same text is worth setting as each
+collection's qmd context (`qmd context add qmd://<name> "<description>"`), which puts
+it in front of Claude on every search result.
+
+### Naming convention
+
+<!-- Tell Claude how your filenames look, so new notes match. Pick one. -->
+
+Name new notes in Title Case with spaces, e.g. `Quarterly Planning.md`.
+
+<!-- Other common conventions:
+     kebab-case:    quarterly-planning.md
+     date-prefixed: 2026-03-06 Quarterly Planning.md -->
 
 ### Template mapping
 
-<!-- UPDATE THE TABLE BELOW TO MATCH YOUR TEMPLATES. DELETE THIS SECTION IF YOU DON'T USE TEMPLATES. -->
+<!-- Delete this section if you don't use templates. -->
 
-When I ask to create a note, check if it matches a trigger below. If so, use the corresponding template and default location. If no template matches, create the note from scratch.
+When I ask to create a note, check whether it matches a trigger below. If so, use
+that template and default location. If nothing matches, create the note from scratch.
 
-| Trigger | Template file | Default collection | Naming pattern | Explanation on usage |
-|---------|--------------|-------------------|----------------|----------------------|
-| "meeting notes", "meeting with" | `Templates/Meeting Notes.md` | projects | `YYYY-MM-DD Meeting - [topic].md` | For meeting notes such as in-person or Zoom meetings |
+| Trigger | Template file | Default collection | Naming pattern | When it applies |
+|---------|--------------|-------------------|----------------|-----------------|
+| "meeting notes", "meeting with" | `Templates/Meeting Note.md` | projects | `YYYY-MM-DD Meeting - [topic].md` | Notes taken during or after a meeting |
 | "daily note", "today's note" | `Templates/Daily Note.md` | inbox | `YYYY-MM-DD.md` | Daily journal or log entry |
-| "recipe" | `Templates/Recipe.md` | personal | `[recipe name].md` | Having to do with food or cooking instructions |
-| "person", "contact" | `Templates/Person.md` | people | `[person name].md` | Notes about a specific person or contact |
+| "recipe" | `Templates/Recipe Template.md` | personal | `[recipe name].md` | Cooking instructions and ingredients |
+| "person", "contact" | `Templates/Person.md` | people | `[person name].md` | Notes about a specific person |
+
+Every template file listed here must actually exist in the vault. A row pointing at a
+missing file will send Claude looking for something that isn't there.
